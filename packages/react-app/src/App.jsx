@@ -385,7 +385,6 @@ function App(props) {
             startBlock={1}
           />
         </Route>
-        }
         <Route exact path="/debug">
           {/*
                 🎛 this scaffolding is full of commonly used components

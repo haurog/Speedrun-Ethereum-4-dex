@@ -18,6 +18,9 @@ contract DEX {
     using SafeMath for uint256; //outlines use of SafeMath for uint256 variables
     IERC20 token; //instantiates the imported contract
 
+    uint256 public totalLiquidity;
+    mapping(address => uint256) public liquidity;
+
     /* ========== EVENTS ========== */
 
     /**
@@ -54,8 +57,13 @@ contract DEX {
      * @return totalLiquidity is the number of LPTs minting as a result of deposits made to DEX contract
      * NOTE: since ratio is 1:1, this is fine to initialize the totalLiquidity (wrt to balloons) as equal to eth balance of contract.
      */
-    function init(uint256 tokens) public payable returns (uint256) {}
-
+    function init(uint256 tokens) public payable returns (uint256) {
+        require(totalLiquidity == 0, "DEX: init - already has liquidity");
+        totalLiquidity = address(this).balance;
+        liquidity[msg.sender] = totalLiquidity;
+        require(token.transferFrom(msg.sender, address(this), tokens), "DEX: init - transfer did not transact");
+        return totalLiquidity;
+    }
     /**
      * @notice returns yOutput, or yDelta for xInput (or xDelta)
      * @dev Follow along with the [original tutorial](https://medium.com/@austin_48503/%EF%B8%8F-minimum-viable-exchange-d84f30bd0c90) Price section for an understanding of the DEX's pricing model and for a price function to add to your contract. You may need to update the Solidity syntax (e.g. use + instead of .add, * instead of .mul, etc). Deploy when you are done.

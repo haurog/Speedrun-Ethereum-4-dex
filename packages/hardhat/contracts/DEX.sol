@@ -26,12 +26,22 @@ contract DEX {
     /**
      * @notice Emitted when ethToToken() swap transacted
      */
-    event EthToTokenSwap();
+    event EthToTokenSwap(
+        address sender,
+        string message,
+        uint256 valueIn,
+        uint256 valueOut
+    );
 
     /**
      * @notice Emitted when tokenToEth() swap transacted
      */
-    event TokenToEthSwap();
+    event TokenToEthSwap(
+        address sender,
+        string message,
+        uint256 valueIn,
+        uint256 valueOut
+    );
 
     /**
      * @notice Emitted when liquidity provided to DEX and mints LPTs.
@@ -93,12 +103,43 @@ contract DEX {
     /**
      * @notice sends Ether to DEX in exchange for $BAL
      */
-    function ethToToken() public payable returns (uint256 tokenOutput) {}
+    function ethToToken() public payable returns (uint256 tokenOutput) {
+        require(msg.value > 0, "Need ETH to swap to token.");
+        uint256 ethReserves = address(this).balance - msg.value;
+        uint256 tokenReserves = token.balanceOf(address(this));
+        tokenOutput = price(msg.value, ethReserves, tokenReserves);
+        bool succeeded = token.transfer(msg.sender, tokenOutput);
+        require(succeeded, "Could not transfer token.");
+        emit EthToTokenSwap(
+            msg.sender,
+            "ETH to Balloons",
+            msg.value,
+            tokenOutput
+        );}
 
     /**
      * @notice sends $BAL tokens to DEX in exchange for Ether
      */
-    function tokenToEth(uint256 tokenInput) public returns (uint256 ethOutput) {}
+    function tokenToEth(uint256 tokenInput) public returns (uint256 ethOutput) {
+        require(tokenInput > 0, "Need tokens to swap to ETH.");
+        uint256 ethReserves = address(this).balance;
+        uint256 tokenReserves = token.balanceOf(address(this));
+        bool succeded = token.transferFrom(
+            msg.sender,
+            address(this),
+            tokenInput
+        );
+        require(succeded, "Tokens could not be transferred to exchange.");
+        ethOutput = price(tokenInput, tokenReserves, ethReserves);
+        (bool sent, ) = msg.sender.call{value: ethOutput}("");
+        require(sent, "Failed to send Ether.");
+        emit TokenToEthSwap(
+            msg.sender,
+            "Balloons to ETH",
+            tokenInput,
+            ethOutput
+        );
+    }
 
     /**
      * @notice allows deposits of $BAL and $ETH to liquidity pool

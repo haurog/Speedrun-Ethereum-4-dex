@@ -72,7 +72,13 @@ contract DEX {
         uint256 xInput,
         uint256 xReserves,
         uint256 yReserves
-    ) public view returns (uint256 yOutput) {}
+    ) public pure returns (uint256 yOutput) {
+        uint256 multiplier = 1000; // multiply everything so we can deduct a fee without going into floating points
+        uint256 fee = 997; // TODO: should probably be a global variable
+        uint256 xReserves_m = xReserves * multiplier;
+        uint256 xInput_f = xInput * fee;
+        yOutput = (xInput_f * yReserves) / (xReserves_m + xInput_f); // No multiplier for yReserves so that we do not have to divide by the multiplier in the end.
+    }
 
     /**
      * @notice returns liquidity for a user.

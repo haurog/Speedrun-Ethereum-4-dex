@@ -23,6 +23,35 @@ export default function Events({ contracts, contractName, eventName, localProvid
   // 📟 Listen for broadcast events
   const events = useEventListener(contracts, contractName, eventName, localProvider, startBlock);
 
+  if (eventName == "Approval") {
+    return(
+      <div style={{ width: 600, margin: "auto", marginTop: 32, paddingBottom: 32 }}>
+        <h2>
+          {eventName} Events
+          <br />
+            "Owner | Spender | Value"
+        </h2>
+        <List
+          bordered
+          dataSource={events}
+          renderItem={item => {
+            return (
+              <List.Item key={item.blockNumber + "_" + item.args[0].toString()}>
+                <Address address={item.args[0]} ensProvider={mainnetProvider} fontSize={16} />
+                <Address address={item.args[1]} ensProvider={mainnetProvider} fontSize={16} />
+                {/* {item.args[1].toString().indexOf("E") == -1 ? (
+                  <TokenBalance balance={item.args[1]} provider={localProvider} />
+                ) : (
+                  `${item.args[1].toString()}`
+                )} */}
+                <TokenBalance balance={item.args[2]} provider={localProvider} />
+              </List.Item>
+            );
+          }}
+        />
+      </div>
+    );
+  } else {
   return (
     <div style={{ width: 600, margin: "auto", marginTop: 32, paddingBottom: 32 }}>
       <h2>
@@ -63,4 +92,5 @@ export default function Events({ contracts, contractName, eventName, localProvid
       />
     </div>
   );
+  }
 }
